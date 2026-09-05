@@ -1,11 +1,10 @@
 
 'use client';
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "../ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { Settings, FileChartColumn, ChartColumnStacked, Users, PillBottle, Menu, Home } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Settings, FileChartColumn, ChartColumnStacked, Users, PillBottle, Home } from "lucide-react";
 
 
 const navLinks = [
@@ -18,6 +17,11 @@ const navLinks = [
 ];
 
 export default function AppSidebar() {
+    const pathname = usePathname();
+    const activeHref = navLinks
+        .filter(({ href }) => href !== "#" && (pathname === href || pathname.startsWith(`${href}/`)))
+        .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
     return (
         <div className="contents">
 
@@ -52,105 +56,33 @@ export default function AppSidebar() {
                 </nav>
             </aside>
 
-            {/* Sidebar mobile */}
-            <div className="sm:hidden flex sm:gap-4 sm:py-4 sm:pl-14">
-                <header className="sticky top-0 z-30 flex h-16 items-center px-4 border-b gap-4 sm:static
-                sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button size="icon" variant="outline" className="sm:hidden rounded-full bg-transparent border-none text-[#003967]">
-                                <Menu className='w-5 h-5' />
-                                <span className="sr-only">Abrir</span>
-                            </Button>
-                        </SheetTrigger>
+            {/* Navegação inferior mobile */}
+            <nav
+                aria-label="Navegação principal"
+                className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,57,103,0.10)] backdrop-blur-sm sm:hidden"
+            >
+                <div className="grid min-h-16 grid-cols-6 items-stretch">
+                    {navLinks.map(({ href, icon: Icon, label }) => {
+                        const isActive = activeHref === href;
 
-                        <SheetContent side="left" className="sm:max-w-xs">
-                            <nav className="p-10 grid text-lg font-medium">
-
-                                {/* Logo Mobile */}
-                                <div className="flex items-center justify-center mb-6">
-                                    <Link href="/dashboard" prefetch={false}>
-                                        <Image
-                                            src="/logo_hiperdia.svg"
-                                            alt="Logo do sistema"
-                                            width={130}
-                                            height={45}
-                                            priority
-                                            className="w-auto h-auto object-contain"
-                                        />
-                                    </Link>
-                                </div>
-
-                                {/* Ícone de ínicio da sidebar */}
-                                <Link
-                                    href="/dashboard"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <Home className="h-5 w-5 transition-all" />
-                                    <p>Início</p>
-                                </Link>
-
-                                {/* Ícone de dispensação da sidebar */}
-                                <Link
-                                    href="/dispensacao"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <PillBottle className="h-5 w-5 transition-all" />
-                                    Dispensação
-                                </Link>
-
-                                {/* Ícone de pacientes da sidebar */}
-                                <Link
-                                    href="/paciente"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <Users className="h-5 w-5 transition-all" />
-                                    Pacientes
-                                </Link>
-
-                                {/* Ícone de estoque da sidebar */}
-                                <Link
-                                    href="/estoque"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <ChartColumnStacked className="h-5 w-5 transition-all" />
-                                    Estoque
-                                </Link>
-
-                                {/* Ícone de relatórios da sidebar */}
-                                <Link
-                                    href="/estoque/relatorio"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <FileChartColumn className="h-5 w-5 transition-all" />
-                                    Relatórios
-                                </Link>
-
-                                {/* Ícone de configurações da sidebar */}
-                                <Link
-                                    href="#"
-                                    className="p-2 flex items-center gap-4 px-2.5 text-muted-[#9ACAE4]
-                                hover:text-[#003967] text-[22px]"
-                                    prefetch={false}
-                                >
-                                    <Settings className="h-5 w-5 transition-all" />
-                                    Configurações
-                                </Link>
-                            </nav>
-                        </SheetContent>
-                    </Sheet>
-                </header>
-            </div>
+                        return (
+                            <Link
+                                key={label}
+                                href={href}
+                                aria-current={isActive ? "page" : undefined}
+                                className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium leading-tight transition-colors ${
+                                    isActive
+                                        ? "bg-[#E5F3FA] text-[#003967]"
+                                        : "text-[#5E7181] hover:bg-[#F2F8FB] hover:text-[#003967]"
+                                }`}
+                            >
+                                <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                <span className="w-full truncate text-center">{label}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </nav>
         </div>
     )
 }
