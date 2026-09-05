@@ -27,11 +27,14 @@ export default function RootLayout({
       )
       } >
         <NextTopLoader
-          color="#FF4500"
+          color="#1976D2"
           height={3}
-          speed={100}
+          speed={200}
+          crawlSpeed={200}
           showSpinner={false}
           easing="ease-out"
+          shadow="0 0 8px rgba(25, 118, 210, 0.45)"
+          zIndex={110}
         />
         {children}
       </body>
