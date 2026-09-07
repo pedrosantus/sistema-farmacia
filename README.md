@@ -18,7 +18,7 @@ o estoque do Programa Hiperdia e dos seus pacientes(que são recorrentes) .
 # Tecnologias utilizadas
 ## Back end
 - Typescript
-- Nest JS com Fastify
+- Nest JS
 - Postgres / Supabase / Prisma
 - Npm
 ## Front end
