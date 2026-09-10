@@ -13,7 +13,7 @@ const navLinks = [
     { href: "/paciente", icon: Users, label: "Pacientes" },
     { href: "/estoque", icon: ChartColumnStacked, label: "Estoque" },
     { href: "/estoque/relatorio", icon: FileChartColumn, label: "Relatórios" },
-    { href: "#", icon: Settings, label: "Configurações" },
+    { href: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
 export default function AppSidebar() {
