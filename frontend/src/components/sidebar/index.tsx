@@ -30,12 +30,12 @@ export default function AppSidebar() {
             border-r z-40">
 
                 {/* Logo */}
-                <div className="flex items-center justify-center w-45">
+                <div className="flex items-center justify-center w-45 mt-2 -mb-4">
                     <Image
-                        src="/logo_hiperdia.svg"
+                        src="/logotipo_hiperdia.svg"
                         alt="Logo do sistema"
                         width={120}
-                        height={40}
+                        height={20}
                         priority
                         className="w-full h-auto"
                     />

@@ -8,7 +8,7 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { loginAction } from "@/libs/auth";
-import Logo  from "@/../public/logo_hiperdia.svg"
+import Logo  from "@/../public/logo_hiperdia.webp"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -64,15 +64,14 @@ export default function Login() {
           <div className="w-full max-w-sm shrink-0 bg-white border border-blue-500 rounded-2xl p-7 shadow-lg flex flex-col gap-4">
 
             <h1 className="text-center text-2xl font-semibold text-[#003967]">Login</h1>
-
-            {/* Botão gov.br */}
+{ /*
             <Button
               type="button"
               className="w-full rounded-full bg-[#003967] hover:bg-[#002a4d] text-white font-medium h-10"
             >
               Entrar com gov.br
             </Button>
-
+*/}
             <div className="border-t border-blue-500 pt-3 text-center"></div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
