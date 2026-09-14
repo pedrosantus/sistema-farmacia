@@ -1,280 +1,220 @@
+"use client";
 
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import Sidebar from "@/components/sidebar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+    criarUsuarioAction,
+    CreateUsuarioData
+} from "@/actions/usuario";
+import { buscarTodasUnidadesAction, Unidade } from "@/actions/unidade";
+import { maskCPF } from "@/utils/formatters";
 
 export default function CadastroUsuario() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    senha: "",
-    confirmarSenha: "",
-    atribuicao: "",
-    registro: "",
-    cep: "",
-    bairro: "",
-    rua: "",
-    numero: ""
-  })
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
+    const [unidades, setUnidades] = useState<Unidade[]>([]);
 
-    if (formData.senha !== formData.confirmarSenha) {
-      setError("As senhas não coincidem.")
-      return
-    }
+    const [formData, setFormData] = useState({
+        nome: "",
+        email: "",
+        cpf: "",
+        password: "",
+        confirmarPassword: "",
+        atribuicao: "",
+        comprovante: "",
+        id_unidade: "",
+    });
 
-    setLoading(true)
+    useEffect(() => {
+        const fetchUnidades = async () => {
+            const result = await buscarTodasUnidadesAction();
+            if (result.data) {
+                setUnidades(result.data);
+            } else {
+                console.error("Não foi possível carregar as unidades:", result.error);
+            }
+        };
 
-    try {
-      console.log("Dados do formulário:", formData)
+        fetchUnidades();
+    }, []);
 
-      // Simulação de cadastro e autenticação (em um app real haveria uma chamada de API de cadastro antes)
-      const res = await signIn("credentials", {
-        redirect: false,
-        email: formData.email,
-        password: formData.senha,
-        nome: formData.nome, // Passando o nome caso a gente queira usar no mock
-      })
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        let formattedValue = value;
 
-      if (res?.error) {
-        setError("Ocorreu um erro ao tentar autenticar após o cadastro.")
-      } else {
-        router.push("/dashboard")
-        router.refresh()
-      }
-    } catch (err) {
-      setError("Ocorreu um erro no cadastro.")
-    } finally {
-      setLoading(false)
-    }
-  }
+        if (name === "cpf") formattedValue = maskCPF(value);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+        setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    };
 
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-white px-4">
-      <Card className="w-full max-w-md border-2 border-gray-100 shadow-xl bg-white rounded-lg">
-        <CardContent className="p-8 flex flex-col gap-6">
-          <h1 className="text-center text-2xl font-semibold text-[#003967]">Cadastre-se</h1>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        
+        if (formData.password !== formData.confirmarPassword) {
+            setError("As senhas não coincidem.");
+            return;
+        }
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error && (
-              <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm text-center font-medium">
-                {error}
-              </div>
-            )}
+        setLoading(true);
 
-            {/* Nome */}
-            <div>
-              <Label htmlFor="nome" className="text-sm font-medium text-gray-700">Nome</Label>
-              <Input
-                id="nome"
-                name="nome"
-                type="text"
-                placeholder="Seu nome completo"
-                required
-                disabled={loading}
-                value={formData.nome}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
+        const payload: CreateUsuarioData = {
+            nome: formData.nome,
+            email: formData.email,
+            cpf: formData.cpf.replace(/\D/g, ""),
+            password: formData.password,
+            atribuicao: formData.atribuicao,
+            comprovante: formData.comprovante,
+            id_unidade: formData.id_unidade,
+        };
+
+        try {
+            const result = await criarUsuarioAction(payload);
+
+            if (result.error) {
+                const errorMsg = Array.isArray(result.error) ? result.error.join(', ') : result.error;
+                setError(errorMsg);
+            } else {
+                alert("Usuário cadastrado com sucesso!");
+                router.push("/configuracoes");
+            }
+        } catch (err) {
+            setError("Ocorreu um erro inesperado ao conectar com o servidor.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <main className="sm:ml-56 min-h-screen bg-gray-50 flex flex-col">
+            <div className="relative flex items-center bg-white border-b border-gray-200 p-4 h-16 shrink-0 shadow-sm">
+                <Sidebar />
+                <h1 className="text-2xl font-semibold text-[#003967] whitespace-nowrap">Cadastro de Usuário</h1>
             </div>
 
-            {/* E-mail */}
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">E-mail</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
-                required
-                disabled={loading}
-                value={formData.email}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
+            <div className="p-4 md:p-8 pb-24 flex-1">
+                <div className="max-w-4xl mx-auto mb-10">
+                    <Card className="shadow-lg border-none ring-1 ring-gray-100 overflow-hidden bg-white rounded-md">
+                        <div className="h-2 w-full bg-[#1976d2]"></div>
+                        <CardHeader className="pb-6 pt-6">
+                            <CardTitle className="text-[#003967] text-2xl font-bold">Novo Usuário</CardTitle>
+                            <CardDescription className="text-base text-gray-500 mt-2">
+                                Preencha as informações do novo usuário (acesso administrativo).
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Exibição de Erros do Backend */}
+                                {error && (
+                                    <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                    {/* Nome */}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label htmlFor="nome" className="text-gray-800 font-medium">Nome Completo <span className="text-red-500">*</span></Label>
+                                        <Input id="nome" name="nome" placeholder="Digite o nome completo do usuário" required value={formData.nome} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* E-mail */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email" className="text-gray-800 font-medium">E-mail <span className="text-red-500">*</span></Label>
+                                        <Input id="email" name="email" type="email" placeholder="seu@email.com" required value={formData.email} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* CPF */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cpf" className="text-gray-800 font-medium">CPF <span className="text-red-500">*</span></Label>
+                                        <Input id="cpf" name="cpf" placeholder="000.000.000-00" required value={formData.cpf} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* Senha */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="password" className="text-gray-800 font-medium">Senha <span className="text-red-500">*</span></Label>
+                                        <Input id="password" name="password" type="password" placeholder="Digite a senha" required value={formData.password} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* Confirmar Senha */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="confirmarPassword" className="text-gray-800 font-medium">Confirmar Senha <span className="text-red-500">*</span></Label>
+                                        <Input id="confirmarPassword" name="confirmarPassword" type="password" placeholder="Confirme a senha" required value={formData.confirmarPassword} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* Atribuição */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="atribuicao" className="text-gray-800 font-medium">Atribuição <span className="text-red-500">*</span></Label>
+                                        <select
+                                            id="atribuicao"
+                                            name="atribuicao"
+                                            required
+                                            value={formData.atribuicao}
+                                            onChange={handleChange}
+                                            className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1976d2] focus-visible:ring-offset-2 text-gray-700"
+                                        >
+                                            <option value="" disabled>Selecione uma atribuição</option>
+                                            <option value="médico">Médico</option>
+                                            <option value="enfermeiro">Enfermeiro</option>
+                                            <option value="técnico de enfermagem">Técnico de Enfermagem</option>
+                                            <option value="farmacêutico">Farmacêutico</option>
+                                            <option value="técnico em farmácia">Técnico em Farmácia</option>
+                                            <option value="odontólogo">Odontólogo</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Comprovante (Registro) */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="comprovante" className="text-gray-800 font-medium">Registro (Comprovante) <span className="text-red-500">*</span></Label>
+                                        <Input id="comprovante" name="comprovante" placeholder="Número do registro profissional" required value={formData.comprovante} onChange={handleChange} className="border-gray-300 h-11 focus-visible:ring-[#1976d2]" />
+                                    </div>
+
+                                    {/* Unidade */}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label htmlFor="id_unidade" className="text-gray-800 font-medium">
+                                            Unidade de Saúde <span className="text-red-500">*</span>
+                                        </Label>
+                                        <select
+                                            id="id_unidade"
+                                            name="id_unidade"
+                                            required
+                                            value={formData.id_unidade}
+                                            onChange={handleChange}
+                                            className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1976d2] focus-visible:ring-offset-2 text-gray-700"
+                                        >
+                                            <option value="" disabled>Selecione a unidade a qual o usuário pertence</option>
+                                            {unidades.map((uni) => (
+                                                <option key={uni.id} value={uni.id}>
+                                                    {uni.nome}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Botões */}
+                                <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 mt-8 border-t border-gray-200">
+                                    <Button type="button" variant="outline" asChild disabled={loading} className="border-gray-300 text-gray-700 hover:bg-gray-100 h-11 px-8 text-base font-medium">
+                                        <Link href="/configuracoes">Cancelar</Link>
+                                    </Button>
+                                    <Button type="submit" disabled={loading} className="bg-[#1976d2] hover:bg-[#1565c0] text-white h-11 px-8 text-base font-medium shadow-sm transition-colors">
+                                        {loading ? "Salvando..." : "Cadastrar Usuário"}
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-
-            {/* Senha */}
-            <div>
-              <Label htmlFor="senha" className="text-sm font-medium text-gray-700">Senha</Label>
-              <Input
-                id="senha"
-                name="senha"
-                type="password"
-                placeholder="Digite sua senha"
-                required
-                disabled={loading}
-                value={formData.senha}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Confirmar Senha */}
-            <div>
-              <Label htmlFor="confirmarSenha" className="text-sm font-medium text-gray-700">Confirmar Senha</Label>
-              <Input
-                id="confirmarSenha"
-                name="confirmarSenha"
-                type="password"
-                placeholder="Confirme sua senha"
-                required
-                disabled={loading}
-                value={formData.confirmarSenha}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Atribuição */}
-            <div>
-              <Label htmlFor="atribuicao" className="text-sm font-medium text-gray-700">Atribuição</Label>
-              <select
-                id="atribuicao"
-                name="atribuicao"
-                required
-                disabled={loading}
-                value={formData.atribuicao}
-                onChange={handleChange}
-                className="rounded-md h-10 border border-blue-500 bg-white text-gray-700 focus-visible:ring-2 focus-visible:ring-[#003967] w-full px-3"
-              >
-                <option value="">Selecione uma atribuição</option>
-                <option value="médico">Médico</option>
-                <option value="enfermeiro">Enfermeiro</option>
-                <option value="técnico de enfermagem">Técnico de Enfermagem</option>
-                <option value="farmacêutico">Farmacêutico</option>
-                <option value="técnico em farmácia">Técnico em Farmácia</option>
-                <option value="odontólogo">Odontólogo</option>
-              </select>
-            </div>
-
-            {/* Registro */}
-            <div>
-              <Label htmlFor="registro" className="text-sm font-medium text-gray-700">Registro</Label>
-              <Input
-                id="registro"
-                name="registro"
-                type="text"
-                placeholder="Número do registro profissional"
-                required
-                disabled={loading}
-                value={formData.registro}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Endereço */}
-            <h2 className="text-lg font-medium text-[#003967] mt-4 mb-2">Endereço</h2>
-
-            {/* CEP */}
-            <div>
-              <Label htmlFor="cep" className="text-sm font-medium text-gray-700">CEP</Label>
-              <Input
-                id="cep"
-                name="cep"
-                type="text"
-                placeholder="00000-000"
-                required
-                disabled={loading}
-                value={formData.cep}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Bairro */}
-            <div>
-              <Label htmlFor="bairro" className="text-sm font-medium text-gray-700">Bairro</Label>
-              <Input
-                id="bairro"
-                name="bairro"
-                type="text"
-                placeholder="Nome do bairro"
-                required
-                disabled={loading}
-                value={formData.bairro}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Rua */}
-            <div>
-              <Label htmlFor="rua" className="text-sm font-medium text-gray-700">Rua</Label>
-              <Input
-                id="rua"
-                name="rua"
-                type="text"
-                placeholder="Nome da rua"
-                required
-                disabled={loading}
-                value={formData.rua}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Número */}
-            <div>
-              <Label htmlFor="numero" className="text-sm font-medium text-gray-700">Número</Label>
-              <Input
-                id="numero"
-                name="numero"
-                type="text"
-                placeholder="Número da residência"
-                required
-                disabled={loading}
-                value={formData.numero}
-                onChange={handleChange}
-                className="rounded-md h-10 bg-white border-blue-500 text-gray-700 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#003967]"
-              />
-            </div>
-
-            {/* Botão cadastrar */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-[#003967] hover:bg-[#002a4d] text-white font-medium h-10 mt-2"
-            >
-              {loading ? "Cadastrando..." : "Cadastrar"}
-            </Button>
-          </form>
-
-          {/* Divisor */}
-          <div className="border-t border-blue-500 pt-3 text-center">
-            <p className="text-sm text-blue-500">
-              Já tem conta?{" "}
-              <Link
-                href="/login"
-                className="text-blue-500 font-semibold underline hover:text-[#003967] transition-colors"
-              >
-                Faça login
-              </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
-  )
+        </main>
+    );
 }

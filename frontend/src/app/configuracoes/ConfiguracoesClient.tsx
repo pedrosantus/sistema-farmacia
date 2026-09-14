@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { X, Plus, Edit, Trash2 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTable } from "@/app/configuracoes/components/data-table"
@@ -142,10 +143,10 @@ export default function ConfiguracoesClient({
                             asChild
                             className="bg-[#1976d2] hover:bg-[#1565c0] text-white h-9 px-4 rounded-lg font-medium flex gap-2 items-center shadow-sm transition-colors"
                         >
-                            <a href="#">
+                            <Link href="/cadastro-usuario">
                                 <Plus className="w-4 h-4" />
                                 Novo Usuário
-                            </a>
+                            </Link>
                         </Button>
                     </CardHeader>
                     <CardContent>

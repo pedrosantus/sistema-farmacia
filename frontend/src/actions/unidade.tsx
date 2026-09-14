@@ -12,6 +12,29 @@ export interface Unidade {
   numero_edificio?: number | null;
 }
 
+export async function buscarTodasUnidadesAction() {
+  const token = (await cookies()).get("session_token")?.value;
+  if (!token) return { error: "Usuário não autenticado." };
+
+  try {
+    const response = await fetch(`${process.env.URL_BACKEND}/unidade`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) return { error: "Erro ao buscar unidades." };
+
+    const data: Unidade[] = await response.json();
+    return { data };
+  } catch {
+    return { error: "Ocorreu um erro inesperado de conexão." };
+  }
+}
+
 export async function buscarUnidadeAction(id: string) {
   const token = (await cookies()).get("session_token")?.value;
   if (!token) return { error: "Usuário não autenticado." };

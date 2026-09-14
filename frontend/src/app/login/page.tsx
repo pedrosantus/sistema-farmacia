@@ -123,18 +123,7 @@ export default function Login() {
               </div>
             </form>
 
-            {/* Divisor */}
-            <div className="border-t border-blue-500 pt-3 text-center">
-              <p className="text-sm text-blue-500">
-                Ainda não tem conta?{" "}
-                <Link
-                  href="/cadastro-usuario"
-                  className="text-blue-500 font-semibold underline hover:text-[#003967] transition-colors"
-                >
-                  Cadastre-se
-                </Link>
-              </p>
-            </div>
+
           </div>
         </CardContent>
       </Card>

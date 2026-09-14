@@ -13,6 +13,42 @@ export interface Usuario {
   id_unidade_pertecente: string;
 }
 
+export interface CreateUsuarioData {
+  cpf: string;
+  nome: string;
+  email: string;
+  password?: string;
+  atribuicao: string;
+  comprovante: string;
+  id_unidade: string;
+}
+
+export async function criarUsuarioAction(dados: CreateUsuarioData) {
+  const token = (await cookies()).get("session_token")?.value;
+  if (!token) return { error: "Usuário não autenticado." };
+
+  try {
+    const response = await fetch(`${process.env.URL_BACKEND}/user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dados),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return { error: (err as { message?: string | string[] }).message || "Erro ao criar usuário." };
+    }
+
+    const data: Usuario = await response.json();
+    return { success: true as const, data };
+  } catch {
+    return { error: "Ocorreu um erro inesperado de conexão." };
+  }
+}
+
 export async function buscarUsuariosAction() {
   const token = (await cookies()).get("session_token")?.value;
   if (!token) return { error: "Usuário não autenticado." };
